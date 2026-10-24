@@ -1,0 +1,55 @@
+name: Update version
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for new release
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh api repos/zen-browser/desktop/releases/latest --jq .tag_name)
+          version=$(echo "$tag" | sed 's/-//g')
+          current=$(sed -n 's/^version=//p' template)
+          echo "Latest: $version, current: $current"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ "$version" != "$current" ]; then
+            echo "update=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update template
+        if: steps.check.outputs.update == 'true'
+        env:
+          TAG: ${{ steps.check.outputs.tag }}
+          VERSION: ${{ steps.check.outputs.version }}
+        run: |
+          url="https://github.com/zen-browser/desktop/releases/download/$TAG/zen.linux-x86_64.tar.xz"
+          checksum=$(curl -fsSL "$url" | sha256sum | cut -d' ' -f1)
+          sed -i \
+            -e "s/^version=.*/version=$VERSION/" \
+            -e "s/^revision=.*/revision=1/" \
+            -e "s/^checksum=.*/checksum=$checksum/" \
+            template
+          git diff
+
+      - name: Commit and push
+        if: steps.check.outputs.update == 'true'
+        env:
+          VERSION: ${{ steps.check.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "zen-browser: update to $VERSION"
+          git push
