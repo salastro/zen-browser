@@ -5,7 +5,7 @@ This repository contains files for packaging Zen Browser for Void Linux using th
 ## Files
 
 1. `template`: XBPS template file for Zen Browser
-2. `files/update-template.sh`: Script to update the Zen Browser XBPS template
+2. `.github/workflows/update.yml`: GitHub Actions workflow that keeps the template up to date
 
 ## Template File
 
@@ -48,42 +48,9 @@ To install the Zen Browser package:
    vpsm install zen-browser
    ```
 
-## Update Script
+## Automatic Updates
 
-The `update-template.sh` script automates the process of updating the Zen Browser XBPS template. It performs the following tasks:
-
-1. Fetches the latest release version from the Zen Browser GitHub repository
-2. Updates the version in the template file
-3. Updates the checksums
-4. Installs the updated Zen Browser package
-
-### Prerequisites
-
-To use the update script, you need:
-
-- vpsm
-- xbps-src
-- curl
-- sed
-- sh
-
-You must also set the `XBPS_DISTDIR` environment variable to point to your Void Packages directory.
-
-Example:
-```sh
-export XBPS_DISTDIR="$HOME/.void-packages"
-```
-
-### Usage
-
-To update the Zen Browser package:
-
-1. Ensure you have met all prerequisites
-2. Run the update script:
-   ```sh
-   chmod +x files/update-template.sh
-   ./files/update-template.sh
-   ```
+A GitHub Actions workflow checks for a new Zen Browser release every day. When one is out, it updates the version, revision and checksum in `template` and commits the change to `main`. It can also be run manually from the Actions tab.
 
 ## Contributing
 
@@ -91,4 +58,4 @@ If you want to contribute to this package, please make sure to test your changes
 
 ## Issues
 
-If you encounter any issues with the package or the update script, please open an issue in this repository.
+If you encounter any issues with the package or the update workflow, please open an issue in this repository.
